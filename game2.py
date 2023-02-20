@@ -14,21 +14,15 @@ with open("Token.txt", 'r') as fp:
 
 description = '''Discord osrs bot'''
 bot = commands.Bot(intents=discord.Intents.all() , command_prefix= "!" , description='The Best Bot For the Best User!',  case_insensitive=True)
-global TaskLines
-playerMaster = 631886189493747723
 
+player_master = 631886189493747723
 
-with open("taskList1.txt", 'r') as fp:
-    TaskLines = len(fp.readlines())
+level_lengths = {}
+task_files = ["taskList1.txt", "taskList2.txt", "taskList3.txt", "taskList4.txt"]
 
-with open("taskList2.txt", 'r') as fp:
-    TaskLines2 = len(fp.readlines())
-    
-with open("taskList3.txt", 'r') as fp:
-    TaskLines3 = len(fp.readlines())
-
-with open("taskList4.txt", 'r') as fp:
-    TaskLines4 = len(fp.readlines())
+for i, file_name in enumerate(task_files, start=1):
+	with open(file_name, 'r') as fp:
+		level_lengths[i] = len(fp.readlines())
 
 @bot.event
 async def on_ready():
@@ -37,18 +31,41 @@ async def on_ready():
     print(bot.user.id)
     print('------')
 
-def isPlayerMaster(human):
-	return human == playerMaster
+def is_player_master(human):
+	return human == player_master
 	
-def playerPosition(author):
+def get_player_position(author: str) -> str:  
 	"""Get current player position"""
 	with open(f"/home/pi/GameMods/GamerPosition/{author}", "r") as log:
 		return log.readline()
+
+def set_player_position(author: str, new_position: int):
+	"""Sets the player's current position"""
+	with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as f:
+		f.write(str(new_position))
+
+def set_player_lvl(author: str, new_lvl: int):
+	with open(f"/home/pi/GameMods/GamerScore/{author}", "w") as f:
+		f.write(str(new_lvl))
 		
-def playerScore(author):
+def player_score(author: str):
 	"""Get current player score"""
 	with open(f"/home/pi/GameMods/GamerScore/{author}", "r") as log:
 		return log.readline()
+
+def get_task(author: str, level: int, position: int) -> str:
+	"""Generates a new task for a player, or tells them to advance to the next level
+	Returns a message suitable for the bot to respond with"""
+	with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
+		log.write(position)
+		text = text + f"\n Your new position is: {number}"
+		with open(task_files[level], 'r') as tasklist:
+			file = tasklist.readlines()
+			if((level_lengths[level]) > int(position)):
+				text = text + f'\n Your new task is: {file[int(position)-1]}'
+			else:
+				text = f"**You finished lvl{level}. type !lvl{current_level + 1} to move on**"
+	return text
 		
 """		
 @bot.command()
@@ -125,30 +142,28 @@ async def score(ctx):
 	embed=discord.Embed(title=title, description=text, color=0xFF5733)
 	await ctx.send(embed=embed)
 
-
+async def move_player_to_next_lvl(author, current_lvl):
+	if ((TaskLines) < int(get_player_position(author))):
+		set_player_lvl(author, 2)
+		set_player_position(author, 0)
+		await ctx.send("You are now in lvl 2. Good luck nerd")
+	else:
+		await ctx.send("you have not finished lvl1")
 
 @bot.command()
 async def lvl2(ctx):
 	author = ctx.author.id
 	author = str(author)
-	if ((TaskLines) < int(playerPosition(author))):
-		with open(f"/home/pi/GameMods/GamerScore/{author}", "w") as gamerScore:
-					gamerScore.write("1")
-					with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
-						log.write("0")
-					await ctx.send("You are now in lvl 2. Good luck nerd")
-	else:
-		await ctx.send("you have not finished lvl1")
+
+
 @bot.command()
 async def lvl3(ctx):
 	author = ctx.author.id
 	author = str(author)
-	if ((TaskLines2) < int(playerPosition(author))):
-		with open(f"/home/pi/GameMods/GamerScore/{author}", "w") as gamerScore:
-					gamerScore.write("2")
-					with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
-						log.write("0")
-					await ctx.send("You are now in lvl 3. Good luck nerd")
+	if ((TaskLines2) < int(get_player_position(author))):
+		set_player_lvl(author, 3)
+		set_player_position(author, 0)
+		await ctx.send("You are now in lvl 3. Good luck nerd")
 	else:
 		await ctx.send("you have not finished lvl2")
 
@@ -157,12 +172,10 @@ async def lvl3(ctx):
 async def lvl4(ctx):
 	author = ctx.author.id
 	author = str(author)
-	if ((TaskLines3) < int(playerPosition(author))):
-		with open(f"/home/pi/GameMods/GamerScore/{author}", "w") as gamerScore:
-					gamerScore.write("3")
-					with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
-						log.write("0")
-					await ctx.send("You are now in lvl 4. Good luck nerd")
+	if ((TaskLines3) < int(get_player_position(author))):
+		set_player_lvl(author, 4)
+		set_player_position(author, 0)
+		await ctx.send("You are now in lvl 4. Good luck nerd")
 	else:
 		await ctx.send("you have not finished lvl3")
 
@@ -172,61 +185,28 @@ async def lvl4(ctx):
 @bot.command()
 async def dice(ctx):
 	"""Dice for player"""
-	number = randint(1, 6)
-	text = f'**you hit**: {str(number)}'
-	author = ctx.author.id
-	author = str(author)
-	playerPos = playerPosition(author)
-	number = str(number + int(playerPos))
-	with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
-		log.write(number)
-		text = text + f"\n Your new position is: {number}"
-		if (int(playerScore(author)) == 0):
-			with open(r"taskList1.txt", 'r') as tasklist:
-				file = tasklist.readlines()
-				if((TaskLines+1) > int(number)):
-					text = text + f'\n Your new task is: {file[int(number)-1]}'
-				else:
-					text = "**You finished lvl 1. type !lvl2 to move on**"
-		elif (int(playerScore(author)) == 1):
-			with open(r"taskList2.txt", 'r') as tasklist:
-				file = tasklist.readlines()
-				if((TaskLines2+1) > int(number)):
-					text = text + f'\n Your new task is: {file[int(number)-1]}'
-				else:
-					text = text + "**You finished lvl 2. type !lvl3 to move on**"
-		else:
-			with open(r"taskList3.txt", 'r') as tasklist:
-				file = tasklist.readlines()
-				if((TaskLines3+1) > int(number)):
-					text = text + f'\n Your new task is: {file[int(number)-1]}'
-				else:
-					text = text + "**You finished lvl 3. type !lvl4 to move on**"
-		author = ctx.message.author
-		title = "Dicing:"
-		embed=discord.Embed(title=title, description=text, color=0xFF5733)
-		embed.set_author(name=ctx.author.display_name, icon_url=author.avatar.url)
-		await ctx.send(embed=embed)
+	roll = randint(1, 6)
+	text = f'**you hit**: {str(roll)}'
+	author = str(ctx.author.id)
+	current_position = get_player_position(author)
+	position = str(roll + int(current_position))
+	message = get_task(author, level, position)
+	title = "Dicing:"
+	embed=discord.Embed(title=title, description=message, color=0xFF5733)
+	embed.set_author(name=ctx.author.display_name, icon_url=author.avatar.url)
+	await ctx.send(embed=embed)
 
 
 
 @bot.command()
 async def undice(ctx):
 	"""unDice for player"""
-	number = randint(-6, -1)
-	text = f'**you hit** {str(number)}'
-	author = ctx.author.id
-	author = str(author)
-	playerPos = playerPosition(author)
-	number = str(number + int(playerPos))
-	with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
-		log.write(number)
-		text = text + f"\n Your new position is: {number}"
-		PlayerScore = int(playerScore(author)) + 1
-		with open(f"taskList{PlayerScore}.txt", 'r') as tasklist:
-			file = tasklist.readlines()
-			text = text + f'\nYour new task is: {file[int(number)-1]}'
-	author = ctx.message.author
+	roll = randint(-6, -1)
+	text = f'**you hit**: {str(roll)}'
+	author = str(ctx.author.id)
+	current_position = get_player_position(author)
+	position = str(roll + int(current_position))
+	message = get_task(author, level, position)
 	title = "Undicing:"
 	embed=discord.Embed(title=title, description=text, color=0xFF5733)
 	embed.set_author(name=ctx.author.display_name, icon_url=author.avatar.url)
@@ -235,7 +215,7 @@ async def undice(ctx):
 
 @bot.command()
 async def resetme(ctx):
-	"""pu player in position 0"""
+	"""put player in position 0"""
 	author = ctx.author.id
 	author = str(author)
 	with open(f"/home/pi/GameMods/GamerPosition/{author}", "w") as log:
@@ -244,7 +224,7 @@ async def resetme(ctx):
 @bot.command()
 async def setpos(ctx,human:str,pos:str):
 	"""owner of game can place player on the field"""
-	if ctx.author.id == playerMaster:
+	if ctx.author.id == player_master:
 		with open(f"/home/pi/GameMods/GamerPosition/{human}", "w") as log:
 			log.write(pos)
 			await ctx.send(f"possition is now: {pos}")
@@ -254,7 +234,7 @@ async def setpos(ctx,human:str,pos:str):
 @bot.command()
 async def setscore(ctx,human:str,pos:str):
 	"""owner of game can place player lvl"""
-	if ctx.author.id == playerMaster:
+	if ctx.author.id == player_master:
 		with open(f"/home/pi/GameMods/GamerScore/{human}", "w") as log:
 			log.write(pos)
 			await ctx.send(f"Lvl is now: {pos}")
@@ -265,7 +245,7 @@ async def setscore(ctx,human:str,pos:str):
 
 @bot.command()
 async def resetall(ctx):
-	if ctx.author.id == playerMaster:
+	if ctx.author.id == player_master:
 		await ctx.send("Everyone is now on field 0")
 	else:
 		await ctx.send("No :)")
@@ -273,13 +253,12 @@ async def resetall(ctx):
 
 @bot.command()
 async def task(ctx):
-	author = ctx.author.id
-	author = str(author)
-	playerPos = playerPosition(author)
-	PlayerScore = int(playerScore(author)) + 1
-	with open(f"taskList{PlayerScore}.txt", 'r') as tasklist:
+	author = str(ctx.author.id)
+	player_pos = get_player_position(author)
+	current_level = int(player_score(author)) + 1
+	with open(task_files[current_level], 'r') as tasklist:
 		file = tasklist.readlines()
-		text = f'**Field {playerPos}:** Your current is: {file[int(playerPos)-1]}'
+		text = f'**Field {player_pos}:** Your current is: {file[int(player_pos)-1]}'
 		author = ctx.message.author
 		title = "Current task:"
 		embed=discord.Embed(title=title, description=text, color=0xFF5733)
