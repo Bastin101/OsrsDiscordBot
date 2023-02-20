@@ -13,6 +13,10 @@ import os.path
 with open("Token.txt", 'r') as fp:
     gTOKEN = fp.readline()
 
+gFilePath = "S:\\pers\\bastin\\rng\\new\\gamefiles"
+gPrefix = "¬"
+
+
 # Bot
 
 intents = discord.Intents.default()
@@ -20,7 +24,7 @@ intents.message_content = True
 intents.members = True
 
 description = '''Discord osrs bot'''
-bot = commands.Bot(intents=intents, command_prefix= "¬" , description='The Best Bot For the Best User!',  case_insensitive=True)
+bot = commands.Bot(intents=intents, command_prefix=gPrefix , description='The Best Bot For the Best User!',  case_insensitive=True)
 
 
 @bot.event
@@ -81,11 +85,11 @@ async def dice(ctx: discord.ext.commands.Context):
 	except rng.NotInGameError:
 		await ctx.send("You're not in the game")
 	except rng.ShouldLevelUpError:
-		await ctx.send("You've already completed the level! Try !levelup")
+		await ctx.send(f"You've already completed the level! Try {gPrefix}levelup")
 	else:
 		message = f'**you hit**: {str(roll)}'
 		if pos[1] < 0:
-			message += f"\nType `!levelup` to advance to the next level"
+			message += f"\nType `{gPrefix}levelup` to advance to the next level"
 		else:
 			task = rng.task(pos)
 			message += f"\nYour new task is: {task}"
@@ -106,15 +110,15 @@ async def undice(ctx: discord.ext.commands.Context):
 	except rng.NotInGameError:
 		await ctx.send("You're not in the game")
 	except rng.ShouldLevelUpError:
-		await ctx.send("You've already completed the level! Try !levelup")
+		await ctx.send(f"You've already completed the level! Try {gPrefix}levelup")
 	except rng.NoUndiceError:
 		await ctx.send("No undicing on step 1! Do your task.")
 	except rng.ShouldDiceError:
-		await ctx.send("You've not started the level yet! Roll !dice.")
+		await ctx.send(f"You've not started the level yet! Roll {gPrefix}dice.")
 	else:
 		message = f'**you hit**: {str(roll)}'
 		if pos[1] < 0:
-			message += f"\nType `!levelup` to advance to the next level"
+			message += f"\nType `{gPrefix}levelup` to advance to the next level"
 		else:
 			task = rng.task(pos)
 			message += f"\nYour new task is: {task}"
@@ -136,9 +140,9 @@ async def task(ctx: discord.ext.commands.Context):
 	except rng.NotInGameError:
 		await ctx.send("You're not in the game")
 	except rng.ShouldLevelUpError:
-		await ctx.send("You've completed the level! Try !levelup")
+		await ctx.send(f"You've completed the level! Try {gPrefix}levelup")
 	except rng.ShouldDiceError:
-		await ctx.send("You've not started the level yet! Roll !dice.")
+		await ctx.send(f"You've not started the level yet! Roll {gPrefix}dice.")
 	except rng.CompletedGameError:
 		await ctx.send("You've completed the game!.")
 	else:
@@ -226,5 +230,5 @@ async def score(ctx: discord.ext.commands.Context):
 	
 
 logging.basicConfig(level=logging.DEBUG)
-rng.init("S:\\pers\\bastin\\rng\\new\\gamefiles")
+rng.init(gFilePath)
 bot.run(gTOKEN)

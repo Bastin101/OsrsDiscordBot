@@ -278,4 +278,7 @@ def init(path):
 	global gFILEBASE
 	gFILEBASE = path 
 
+	os.mkdir(os.path.join(path, "gamers"))
+	os.mkdir(os.path.join(path, "history"))
+
 	Tasks.loadFiles(os.path.join(path, "tasks"))
