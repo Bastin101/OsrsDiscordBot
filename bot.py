@@ -10,8 +10,8 @@ import os.path
 
 # Settings
 
-with open("Token.txt", 'r') as fp:
-    gTOKEN = fp.readline()
+with open("token.txt", 'r') as fp:
+    gTOKEN = fp.readline().strip()
 
 gFilePath = "S:\\pers\\bastin\\rng\\new\\gamefiles"
 gPrefix = "¬"

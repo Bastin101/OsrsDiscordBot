@@ -278,7 +278,7 @@ def init(path):
 	global gFILEBASE
 	gFILEBASE = path 
 
-	os.mkdir(os.path.join(path, "gamers"))
-	os.mkdir(os.path.join(path, "history"))
+	os.makedirs(os.path.join(path, "gamers"), exist_ok=True)
+	os.makedirs(os.path.join(path, "history"), exist_ok=True)
 
 	Tasks.loadFiles(os.path.join(path, "tasks"))
