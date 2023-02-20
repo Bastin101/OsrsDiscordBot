@@ -10,16 +10,10 @@ import os.path
 
 # Settings
 
-# with open("Token.txt", 'r') as fp:
-#     gTOKEN = fp.readline()
-
-
-gTOKEN = "MTA3Njg4Mzg4MTY5NDg3MTYxMg.GXkuDF.1XQuHR-HmDLbtLeZRZbv1N2a6mGsjbk9rRURsI"
-gMASTER = 631886189493747723
-
+with open("Token.txt", 'r') as fp:
+    gTOKEN = fp.readline()
 
 # Bot
-
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,9 +22,6 @@ intents.members = True
 description = '''Discord osrs bot'''
 bot = commands.Bot(intents=intents, command_prefix= "¬" , description='The Best Bot For the Best User!',  case_insensitive=True)
 
-
-def is_player_master(human):
-	return human == gMASTER
 
 @bot.event
 async def on_ready():
