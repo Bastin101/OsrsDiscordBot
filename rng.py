@@ -114,6 +114,16 @@ class History:
 		with open(os.path.join(gFILEBASE, "history", player), "a") as f:
 			f.write(f"{dt},{score}\n")
 
+
+	def getPlayer(player):
+		st = []
+		with open(os.path.join(gFILEBASE, "history", player), "r") as log:
+			for line in log.readlines():
+				cols = line.split(',')
+				st.append((datetime.strptime(cols[0], "%Y%m%dT%H%M"),int(cols[1])))
+
+		return st
+
 class Files:
 	@staticmethod
 	def loadPlayer(player):
@@ -134,6 +144,10 @@ class Files:
 		logging.debug(f"updatePlayer({player}, {position})")
 		with open(os.path.join(gFILEBASE, "gamers", player), "w") as f:
 			f.write(f"{position[0]},{position[1]}")
+
+	@staticmethod
+	def listPlayers():
+		return os.listdir(os.path.join(gFILEBASE, "gamers"))
 
 class Game:
 	@staticmethod
@@ -258,8 +272,9 @@ def task(pos):
 
 	return Tasks.get(pos)
 
+
 def getAllPositions():
-	files = os.listdir(os.path.join(gFILEBASE, "gamers"))
+	files = Files.listPlayers()
 
 	gamers = {}
 	for g in files:
@@ -269,6 +284,13 @@ def getAllPositions():
 
 def score(position):
 	return Tasks.score(position)
+
+
+def getHistory(gamer):
+	return History.getPlayer(gamer)
+
+def listGamers():
+	return Files.listPlayers()
 
 
 

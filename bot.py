@@ -7,6 +7,8 @@ import logging
 import rng
 import os.path
 
+import matplotlib.pyplot as plt
+
 
 # Settings
 
@@ -92,6 +94,7 @@ async def dice(ctx: discord.ext.commands.Context):
 			message += f"\nType `{gPrefix}levelup` to advance to the next level"
 		else:
 			task = rng.task(pos)
+			message += f"\nYou are now at: {pos[1]} (level {pos[0]+1})"
 			message += f"\nYour new task is: {task}"
 
 		title = "Dicing:"
@@ -121,6 +124,7 @@ async def undice(ctx: discord.ext.commands.Context):
 			message += f"\nType `{gPrefix}levelup` to advance to the next level"
 		else:
 			task = rng.task(pos)
+			message += f"\nYou are now at: {pos[1]} (level {pos[0]+1})"
 			message += f"\nYour new task is: {task}"
 
 		title = "Dicing:"
@@ -146,7 +150,8 @@ async def task(ctx: discord.ext.commands.Context):
 	except rng.CompletedGameError:
 		await ctx.send("You've completed the game!.")
 	else:
-		text = f"Your current task is {task}"
+		text = f"You are at: {pos[1]} (level {pos[0]+1})"
+		text += f"\nYour current task is {task}"
 
 		title = "Current task:"
 		embed=discord.Embed(title=title, description=text, color=0xFF5733)
@@ -216,19 +221,65 @@ async def score(ctx: discord.ext.commands.Context):
 	"""print all player names and score"""
 	gamers = rng.getAllPositions()
 
+	results = []
+	for g in gamers.items():
+		name = getUserName(int(pair[0]))
+		score = rng.score(pair[1])
+		results.append((name,score))
+
 	"""sort based on positions"""
+	results = sorted(results, key=lambda pair: pair[1], reverse=True)
 
 	title = "Highscore:"
 	text = ""
-	for pair in gamers.items():
-		name = getUserName(int(pair[0]))
-		score = rng.score(pair[1])
-		text = text + f"{name}: {score} \n"
+	for pair in results:
+		text = text + f"{pair[0]}: {pair[1]} \n"
 		
 	embed=discord.Embed(title=title, description=text, color=0xFF5733)
 	await ctx.send(embed=embed)
-	
 
-logging.basicConfig(level=logging.DEBUG)
+
+@bot.command()
+async def graph(ctx: discord.ext.commands.Context):
+	gamers = rng.listGamers()
+
+	data = []
+	order = []
+
+	for gamer in gamers:
+		hst = rng.getHistory(gamer)
+		score = hst[-1]
+
+		last = True
+		for i in range(0,len(data)):
+			if score[1] > data[order[i]][-1][1]:
+				order.insert(i, len(data))
+				last = False
+				break
+		if last:
+			order.append(len(data))
+
+		data.append(hst)
+
+	fig, ax = plt.subplots()
+
+	n = 1
+	for o in order:
+		gamer = getUserName(int(gamers[o]))
+		sco = data[o][-1][1]
+
+		ax.plot([d[0] for d in data[o]], [d[1] for d in data[o]], label = f"{n}. {gamer} ({sco})")
+
+		n = n+1
+
+	plt.grid(True)
+	plt.legend()
+	plt.savefig('history.png')
+
+	await ctx.send(file=discord.File("history.png"))
+
+
+
+logging.basicConfig(level=logging.INFO)
 rng.init(gFilePath)
 bot.run(gTOKEN)
