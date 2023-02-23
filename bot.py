@@ -1,8 +1,10 @@
 
+
 import discord
 from discord.ext import commands
 import asyncio
 import logging
+from datetime import datetime
 
 import rng
 import os.path
@@ -15,7 +17,7 @@ import matplotlib.pyplot as plt
 with open("token.txt", 'r') as fp:
     gTOKEN = fp.readline().strip()
 
-gFilePath = "S:\\pers\\bastin\\rng\\new\\gamefiles"
+gFilePath = "/home/liet/bastin/bot/OsrsDiscordBot/gamefiles"
 gPrefix = "¬"
 
 
@@ -127,7 +129,7 @@ async def undice(ctx: discord.ext.commands.Context):
 			message += f"\nYou are now at: {pos[1]} (level {pos[0]+1})"
 			message += f"\nYour new task is: {task}"
 
-		title = "Dicing:"
+		title = "Undicing:"
 		embed=discord.Embed(title=title, description=message, color=0xFF5733)
 		embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
 		await ctx.send(embed=embed)
@@ -223,8 +225,8 @@ async def score(ctx: discord.ext.commands.Context):
 
 	results = []
 	for g in gamers.items():
-		name = getUserName(int(pair[0]))
-		score = rng.score(pair[1])
+		name = getUserName(int(g[0]))
+		score = rng.score(g[1])
 		results.append((name,score))
 
 	"""sort based on positions"""
@@ -246,9 +248,14 @@ async def graph(ctx: discord.ext.commands.Context):
 	data = []
 	order = []
 
+	startdate = datetime.now()
+
 	for gamer in gamers:
 		hst = rng.getHistory(gamer)
 		score = hst[-1]
+
+		if hst[0][0] < startdate:
+			startdate = hst[0][0]
 
 		last = True
 		for i in range(0,len(data)):
@@ -261,6 +268,7 @@ async def graph(ctx: discord.ext.commands.Context):
 
 		data.append(hst)
 
+	plt.style.use('dark_background')
 	fig, ax = plt.subplots()
 
 	n = 1
@@ -268,13 +276,14 @@ async def graph(ctx: discord.ext.commands.Context):
 		gamer = getUserName(int(gamers[o]))
 		sco = data[o][-1][1]
 
-		ax.plot([d[0] for d in data[o]], [d[1] for d in data[o]], label = f"{n}. {gamer} ({sco})")
+		ax.plot([((d[0] - startdate).total_seconds() / 60 / 60) for d in data[o]], [d[1] for d in data[o]], label = f"{n}. {gamer} ({sco})")
 
 		n = n+1
 
-	plt.grid(True)
 	plt.legend()
-	plt.savefig('history.png')
+	plt.tight_layout()
+	plt.gcf().set_size_inches(12, 8)
+	plt.savefig('history.png', dpi=200)
 
 	await ctx.send(file=discord.File("history.png"))
 
